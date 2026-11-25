@@ -390,13 +390,13 @@ def upload_bukti(booking_id):
         if request.method == 'POST':
             # Cek apakah sudah expired
             exp_date = booking['expires_at']
-        if isinstance(exp_date, str):
-            exp_date = datetime.strptime(exp_date, '%Y-%m-%d %H:%M:%S')
+            if isinstance(exp_date, str):
+                exp_date = datetime.strptime(exp_date, '%Y-%m-%d %H:%M:%S')
             if datetime.now() > exp_date and booking['status'] == 'menunggu_pembayaran':
-                cursor.execute("UPDATE bookings SET status = 'kedaluwarsa' WHERE id = ?", (booking_id,))
+                cursor.execute("UPDATE bookings SET status = 'kedaluwarsa' WHERE id = ?", (booking['id'],))
                 cursor.execute("UPDATE rooms SET status = 'kosong' WHERE id = ?", (booking['room_id'],))
                 conn.commit()
-                flash("Maaf, batas waktu pembayaran 24 jam telah kedaluwarsa. Kamar dibuka kembali untuk pemesanan lain.", "danger")
+                flash("Maaf, batas waktu pembayaran 24 jam telah kedaluwarsa. Kamar dibuka kembali untuk pemesanan.", "danger")
                 return redirect(url_for('katalog'))
 
             if 'payment_proof' not in request.files:
