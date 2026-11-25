@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # KosNest - Aplikasi Web Informasi & Booking Kos Modern
 
 Aplikasi web informasi dan pemesanan kamar kos berbasis **Python Flask** dan **SQLite**, dirancang berdasarkan **Perancangan Prototipe UI Interaktif Berbasis Ergonomi** untuk persona calon penghuni (**Titut**) dan pemilik kos (**Admin**).
@@ -136,3 +137,6 @@ Ran 7 tests in 6.5s
 
 OK
 ```
+=======
+# kostnest
+>>>>>>> b50f98d29c833102d85addbca161da55b82140f9
