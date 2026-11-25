@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Konfirmasi Booking Kamar {{ room.room_number }} | KosNest{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white p-4 border-bottom">
+          <div class="d-flex align-items-center gap-3">
+            <div class="p-3 rounded-circle text-primary" style="background: #ccfbf1;">
+              <i class="bi bi-wallet2 fs-3"></i>
+            </div>
+            <div>
+              <h4 class="fw-bold text-dark mb-1">Formulir Pemesanan & Pembayaran Kos</h4>
+              <p class="text-muted small mb-0">Pilih bank transfer untuk pembayaran awal kos kamar {{ room.room_number }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- Ringkasan Kamar yang Dipesan -->
+          <div class="p-3 rounded-3 bg-light mb-4 border">
+            <div class="row align-items-center">
+              <div class="col-md-3 mb-3 mb-md-0">
+                <img src="{{ room.main_image }}" alt="{{ room.name }}" class="img-fluid rounded-3 w-100 object-fit-cover" style="height: 90px;">
+              </div>
+              <div class="col-md-6 mb-2 mb-md-0">
+                <span class="badge bg-secondary-subtle text-secondary small mb-1">Lantai {{ room.floor }} &bull; {{ room.size }}</span>
+                <h5 class="fw-bold mb-1 text-dark">Kamar {{ room.room_number }} - {{ room.name }}</h5>
+                <p class="text-muted small mb-0">{{ room.type }} &bull; Termasuk fasilitas lengkap</p>
+              </div>
+              <div class="col-md-3 text-md-end">
+                <div class="text-muted small">Total Tagihan:</div>
+                <div class="fs-4 fw-extrabold text-success" style="color: #0f766e !important;">
+                  {{ room.price|rupiah }}
+                </div>
+                <small class="text-muted">1 Bulan Pertama</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Alert Aturan 24 Jam -->
+          <div class="alert alert-warning border-0 rounded-3 p-3 mb-4 d-flex align-items-start gap-3">
+            <i class="bi bi-clock-history fs-3 text-warning"></i>
+            <div>
+              <div class="fw-bold text-warning-emphasis">Aturan Batas Waktu Pembayaran 24 Jam</div>
+              <div class="small text-secondary">
+                Setelah Anda mengonfirmasi booking, kamar akan dikunci dengan status <strong>DIPESAN</strong> dan tidak dapat dipesan oleh orang lain. Anda wajib mentransfer dan mengunggah bukti transfer dalam waktu <strong>24 jam</strong> sebelum kamar otomatis dibuka kembali.
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Pemilihan Bank -->
+          <form method="POST" action="{{ url_for('booking_kamar', room_id=room.id) }}">
+            <h5 class="fw-bold text-dark mb-3">Pilih Bank Pembayaran (Simulasi E-Banking)</h5>
+            
+            <div class="row g-3 mb-4">
+              {% for bank_key, bank in banks.items() %}
+                <div class="col-md-6">
+                  <label class="bank-card w-100 d-block cursor-pointer position-relative">
+                    <input type="radio" name="bank_name" value="{{ bank_key }}" class="form-check-input position-absolute top-0 end-0 m-3" {{ 'checked' if loop.first }}>
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="p-2 px-3 rounded bg-light border fw-bold text-primary">
+                        {{ bank_key }}
+                      </div>
+                      <div>
+                        <div class="fw-bold text-dark">{{ bank.bank_name }}</div>
+                        <div class="text-muted small font-monospace">{{ bank.account_number }}</div>
+                        <div class="text-secondary small">a.n. {{ bank.account_holder }}</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+
+            <!-- Identitas Penyewa -->
+            <div class="card p-3 border-0 bg-light rounded-3 mb-4">
+              <div class="small fw-bold text-muted text-uppercase mb-2">Data Calon Penghuni:</div>
+              <div class="row g-2 small">
+                <div class="col-md-4">
+                  <span class="text-muted">Nama:</span> <strong class="text-dark">{{ current_user.full_name }}</strong>
+                </div>
+                <div class="col-md-4">
+                  <span class="text-muted">Email:</span> <strong class="text-dark">{{ current_user.email }}</strong>
+                </div>
+                <div class="col-md-4">
+                  <span class="text-muted">No. HP:</span> <strong class="text-dark">{{ current_user.phone }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <a href="{{ url_for('detail_kamar', room_id=room.id) }}" class="btn btn-light rounded-pill px-4">
+                <i class="bi bi-arrow-left me-1"></i> Batal
+              </a>
+              <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold" style="background-color: #0f766e; border-color: #0f766e;">
+                <i class="bi bi-check2-circle me-1"></i> Konfirmasi Booking Sekarang
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

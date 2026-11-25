@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="grad_kamar_b201_balkon_svg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:0.95" />
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="500" fill="url(#grad_kamar_b201_balkon_svg)"/>
+  <rect width="800" height="500" fill="url(#grid)"/>
+  <circle cx="700" cy="80" r="140" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="100" cy="420" r="160" fill="rgba(255,255,255,0.04)"/>
+  <text x="400" y="210" font-family="'Segoe UI', Roboto, sans-serif" font-size="80" text-anchor="middle" fill="#ffffff" opacity="0.9">🌿</text>
+  <text x="400" y="290" font-family="'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="bold" text-anchor="middle" fill="#ffffff">Balkon B-201</text>
+  <text x="400" y="340" font-family="'Segoe UI', Roboto, sans-serif" font-size="18" text-anchor="middle" fill="#94a3b8">Pemandangan Hijau & Udara Segar</text>
+  <rect x="250" y="380" width="300" height="38" rx="19" fill="rgba(255,255,255,0.15)"/>
+  <text x="400" y="405" font-family="'Segoe UI', Roboto, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#38bdf8">KosNest Exclusive Residence</text>
+</svg>

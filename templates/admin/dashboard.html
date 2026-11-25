@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Pemilik Kos | KosNest Admin{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+  
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 rounded-pill fw-bold mb-2">PANEL PEMILIK KOS</span>
+      <h2 class="fw-extrabold text-dark mb-1">Dashboard Kos & Manajemen Kamar</h2>
+      <p class="text-muted mb-0">Kelola ketersediaan kamar kos, galeri lingkungan, dan verifikasi transfer pembayaran.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('admin_kamar_tambah') }}" class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm" style="background-color: #0f766e; border-color: #0f766e;">
+        <i class="bi bi-plus-circle me-1"></i> Tambah Kamar
+      </a>
+      <a href="{{ url_for('admin_galeri_kos') }}" class="btn btn-outline-secondary rounded-pill px-3">
+        <i class="bi bi-images me-1"></i> Foto Kos
+      </a>
+    </div>
+  </div>
+
+  <!-- Statistik Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-2">
+      <div class="stat-slot-card">
+        <div>
+          <div class="text-muted small fw-semibold">TOTAL KAMAR</div>
+          <div class="fs-3 fw-bold text-dark">{{ stats.total_rooms }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="stat-slot-card border-success-subtle" style="background: #f0fdf4;">
+        <div>
+          <div class="text-success small fw-bold">SLOT KOSONG</div>
+          <div class="fs-3 fw-bold text-success">{{ stats.kosong }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="stat-slot-card border-warning-subtle" style="background: #fffbeb;">
+        <div>
+          <div class="text-warning-emphasis small fw-bold">DIPESAN</div>
+          <div class="fs-3 fw-bold text-warning-emphasis">{{ stats.dipesan }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="stat-slot-card border-danger-subtle" style="background: #fef2f2;">
+        <div>
+          <div class="text-danger small fw-bold">KAMAR TERISI</div>
+          <div class="fs-3 fw-bold text-danger">{{ stats.terisi }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="stat-slot-card border-primary-subtle" style="background: #eff6ff;">
+        <div>
+          <div class="text-primary small fw-bold">PERLU VERIFIKASI</div>
+          <div class="fs-3 fw-bold text-primary">{{ stats.pending_verifications }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-2">
+      <div class="stat-slot-card border-info-subtle" style="background: #f8fafc;">
+        <div>
+          <div class="text-muted small fw-semibold">TOTAL LUNAS</div>
+          <div class="fs-3 fw-bold text-dark">{{ stats.total_lunas }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Verification Quick Action -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+    <div class="card-header bg-white p-4 border-bottom d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="fw-bold text-dark mb-1">
+          <i class="bi bi-patch-check-fill text-primary me-2"></i>Bukti Pembayaran Menunggu Verifikasi
+        </h5>
+        <p class="text-muted small mb-0">Verifikasi struk bukti transfer dari calon penghuni agar kamar menjadi terisi</p>
+      </div>
+      <a href="{{ url_for('admin_verifikasi_list') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+        Lihat Semua Verifikasi &rarr;
+      </a>
+    </div>
+
+    <div class="card-body p-0">
+      {% if pending_bookings %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr class="small text-muted text-uppercase">
+                <th class="ps-4">Kode Booking</th>
+                <th>Calon Penghuni</th>
+                <th>Kamar</th>
+                <th>Nominal & Bank</th>
+                <th>Waktu Unggah</th>
+                <th>Bukti Bayar</th>
+                <th class="text-end pe-4">Aksi Verifikasi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in pending_bookings %}
+                <tr>
+                  <td class="ps-4 fw-bold font-monospace">{{ b.booking_code }}</td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ b.user_name }}</div>
+                    <div class="text-muted small"><i class="bi bi-whatsapp me-1"></i>{{ b.user_phone }}</div>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-primary border">Kamar {{ b.room_number }}</span>
+                    <div class="text-muted small">{{ b.room_name }}</div>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-success">{{ b.amount|rupiah }}</div>
+                    <div class="text-muted small">Via {{ b.bank_name }}</div>
+                  </td>
+                  <td class="text-muted small">{{ b.payment_uploaded_at }}</td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill" data-preview-img="{{ b.payment_proof }}" data-preview-title="Bukti Transfer {{ b.booking_code }}">
+                      <i class="bi bi-image me-1"></i> Lihat Bukti
+                    </button>
+                  </td>
+                  <td class="text-end pe-4">
+                    <a href="{{ url_for('admin_verifikasi_list') }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" style="background-color: #0f766e; border-color: #0f766e;">
+                      Proses Sekarang
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-check2-all fs-1 text-success mb-2 d-block"></i>
+          <p class="mb-0">Tidak ada bukti transfer yang tertunda. Semua pembayaran telah terverifikasi!</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Quick Shortcut Cards -->
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="p-3 rounded-circle text-primary" style="background: #ccfbf1;">
+            <i class="bi bi-door-open fs-3"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold text-dark mb-0">Kelola Kamar Kos</h5>
+            <small class="text-muted">{{ stats.total_rooms }} Kamar Terdaftar</small>
+          </div>
+        </div>
+        <p class="text-muted small mb-4">Tambah kamar baru, ubah harga, fasilitas kamar, ukuran, serta upload galeri foto kamar.</p>
+        <a href="{{ url_for('admin_kamar_list') }}" class="btn btn-outline-primary rounded-pill mt-auto fw-semibold">
+          Buka Daftar Kamar &rarr;
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="p-3 rounded-circle text-info" style="background: #e0f2fe;">
+            <i class="bi bi-images fs-3"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold text-dark mb-0">Foto Lingkungan Kos</h5>
+            <small class="text-muted">Galeri Publik KosNest</small>
+          </div>
+        </div>
+        <p class="text-muted small mb-4">Kelola foto bersama kos seperti tampak depan bangunan, dapur, area jemuran, dan tempat parkir.</p>
+        <a href="{{ url_for('admin_galeri_kos') }}" class="btn btn-outline-info rounded-pill mt-auto fw-semibold">
+          Kelola Galeri Kos &rarr;
+        </a>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="p-3 rounded-circle text-success" style="background: #dcfce7;">
+            <i class="bi bi-wallet2 fs-3"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold text-dark mb-0">Akun Rekening Bank</h5>
+            <small class="text-muted">Metode Pembayaran</small>
+          </div>
+        </div>
+        <div class="small text-muted mb-3">
+          Rekening aktif penerima transfer:
+          <ul class="mb-0 ps-3 mt-1">
+            {% for bank_key, bank in bank_accounts.items() %}
+              <li><strong>{{ bank_key }}</strong>: {{ bank.account_number }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div class="text-secondary small mt-auto fst-italic">Atas Nama: {{ bank_accounts.BCA.account_holder }}</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

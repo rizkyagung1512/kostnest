@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Riwayat Pembayaran Kos | KosNest{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+  
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-extrabold text-dark mb-1">Riwayat Pembayaran & Pemesanan</h2>
+      <p class="text-muted mb-0">Pantau status transaksi, bukti transfer e-banking, dan ketersediaan kamar yang Anda pesan.</p>
+    </div>
+    <a href="{{ url_for('katalog') }}" class="btn btn-outline-primary rounded-pill px-4">
+      <i class="bi bi-search me-1"></i> Cari Kamar Lain
+    </a>
+  </div>
+
+  {% if bookings %}
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr class="small text-muted text-uppercase">
+              <th class="ps-4">Kode & Tanggal</th>
+              <th>Kamar Dipesan</th>
+              <th>Nominal & Metode</th>
+              <th>Status Transaksi</th>
+              <th>Bukti Bayar</th>
+              <th class="text-end pe-4">Aksi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bookings %}
+              <tr>
+                <!-- Kode & Waktu -->
+                <td class="ps-4">
+                  <div class="fw-bold font-monospace text-dark">{{ b.booking_code }}</div>
+                  <div class="text-muted small">
+                    <i class="bi bi-calendar3 me-1"></i>{{ b.created_at }}
+                  </div>
+                  {% if b.status == 'menunggu_pembayaran' %}
+                    <div class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle mt-1" style="font-size: 0.7rem;">
+                      Batas: {{ b.expires_at }}
+                    </div>
+                  {% endif %}
+                </td>
+
+                <!-- Kamar -->
+                <td>
+                  <div class="d-flex align-items-center gap-3">
+                    <img src="{{ b.main_image }}" alt="{{ b.room_number }}" class="rounded-3 border object-fit-cover" style="width: 54px; height: 42px;">
+                    <div>
+                      <div class="fw-bold text-dark">Kamar {{ b.room_number }}</div>
+                      <div class="text-muted small">{{ b.room_name }} ({{ b.room_type }})</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Nominal & Bank -->
+                <td>
+                  <div class="fw-bold text-success" style="color: #0f766e !important;">{{ b.amount|rupiah }}</div>
+                  <div class="text-muted small">
+                    <span class="badge bg-light text-dark border">{{ b.bank_name }}</span>
+                    <span>No. Rek: {{ b.bank_account_number }}</span>
+                  </div>
+                </td>
+
+                <!-- Status Badge -->
+                <td>
+                  {% if b.status == 'menunggu_pembayaran' %}
+                    <span class="badge badge-dipesan px-3 py-2 rounded-pill">
+                      <i class="bi bi-hourglass me-1"></i>Menunggu Pembayaran
+                    </span>
+                  {% elif b.status == 'menunggu_verifikasi' %}
+                    <span class="badge badge-verifikasi px-3 py-2 rounded-pill">
+                      <i class="bi bi-clock-history me-1"></i>Menunggu Verifikasi
+                    </span>
+                  {% elif b.status == 'disetujui' %}
+                    <span class="badge badge-kosong px-3 py-2 rounded-pill">
+                      <i class="bi bi-check-circle-fill me-1"></i>Disetujui (Lunas)
+                    </span>
+                    <div class="small text-muted mt-1">Status Kamar: <strong>TERISI</strong></div>
+                  {% elif b.status == 'ditolak' %}
+                    <span class="badge badge-terisi px-3 py-2 rounded-pill">
+                      <i class="bi bi-x-circle-fill me-1"></i>Ditolak Pemilik
+                    </span>
+                    {% if b.rejection_reason %}
+                      <div class="small text-danger mt-1">"{{ b.rejection_reason }}"</div>
+                    {% endif %}
+                  {% else %}
+                    <span class="badge badge-kedaluwarsa px-3 py-2 rounded-pill">
+                      <i class="bi bi-slash-circle me-1"></i>Kedaluwarsa (24 Jam)
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- Bukti Bayar -->
+                <td>
+                  {% if b.payment_proof %}
+                    <button class="btn btn-sm btn-outline-primary rounded-pill d-inline-flex align-items-center gap-1" data-preview-img="{{ b.payment_proof }}" data-preview-title="Bukti Transfer {{ b.booking_code }}">
+                      <i class="bi bi-image"></i>
+                      <span>Lihat Bukti</span>
+                    </button>
+                    <div class="small text-muted" style="font-size: 0.7rem;">{{ b.payment_uploaded_at }}</div>
+                  {% else %}
+                    <span class="text-muted small fst-italic">Belum diunggah</span>
+                  {% endif %}
+                </td>
+
+                <!-- Aksi -->
+                <td class="text-end pe-4">
+                  {% if b.status in ['menunggu_pembayaran', 'ditolak'] %}
+                    <a href="{{ url_for('upload_bukti', booking_id=b.id) }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold" style="background-color: #0f766e; border-color: #0f766e;">
+                      <i class="bi bi-upload me-1"></i> Unggah Bukti
+                    </a>
+                  {% elif b.status == 'menunggu_verifikasi' %}
+                    <a href="{{ url_for('upload_bukti', booking_id=b.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                      <i class="bi bi-eye me-1"></i> Rincian
+                    </a>
+                  {% else %}
+                    <a href="{{ url_for('detail_kamar', room_id=b.room_id) }}" class="btn btn-light btn-sm rounded-pill border px-3">
+                      Info Kamar
+                    </a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="card border-0 rounded-4 shadow-sm text-center py-5">
+      <div class="py-4">
+        <i class="bi bi-receipt-cutoff fs-1 text-muted mb-3 d-block"></i>
+        <h5 class="fw-bold text-dark">Belum Ada Riwayat Pemesanan</h5>
+        <p class="text-muted small mb-3">Anda belum pernah melakukan booking kamar kos. Silakan cek slot kamar kosong di katalog.</p>
+        <a href="{{ url_for('katalog') }}" class="btn btn-primary rounded-pill px-4" style="background-color: #0f766e; border-color: #0f766e;">
+          <i class="bi bi-grid me-1"></i> Lihat Slot Kamar Kosong
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

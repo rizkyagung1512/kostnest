@@ -1,0 +1,5 @@
+.env
+kosnest.db
+__pycache__/
+venv/
+node_modules/

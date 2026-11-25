@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Verifikasi Pembayaran | KosNest Admin{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+  
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+          <li class="breadcrumb-item active">Verifikasi Pembayaran</li>
+        </ol>
+      </nav>
+      <h2 class="fw-extrabold text-dark mb-0">Verifikasi Bukti Transfer Calon Penghuni</h2>
+      <p class="text-muted mb-0">Periksa struk pembayaran e-banking. Persetujuan otomatis mengubah status kamar menjadi <strong>TERISI</strong>.</p>
+    </div>
+  </div>
+
+  <!-- Filter Status Tabs -->
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="{{ url_for('admin_verifikasi_list', status='menunggu_verifikasi') }}" class="btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-primary' if current_status == 'menunggu_verifikasi' else 'btn-outline-secondary' }}" style="{{ 'background-color: #0f766e; border-color: #0f766e;' if current_status == 'menunggu_verifikasi' }}">
+      <i class="bi bi-clock-history me-1"></i> Perlu Verifikasi
+    </a>
+    <a href="{{ url_for('admin_verifikasi_list', status='semua') }}" class="btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-primary' if current_status == 'semua' else 'btn-outline-secondary' }}" style="{{ 'background-color: #0f766e; border-color: #0f766e;' if current_status == 'semua' }}">
+      Semua Riwayat
+    </a>
+    <a href="{{ url_for('admin_verifikasi_list', status='disetujui') }}" class="btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-primary' if current_status == 'disetujui' else 'btn-outline-secondary' }}" style="{{ 'background-color: #0f766e; border-color: #0f766e;' if current_status == 'disetujui' }}">
+      Disetujui (Lunas)
+    </a>
+    <a href="{{ url_for('admin_verifikasi_list', status='ditolak') }}" class="btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-primary' if current_status == 'ditolak' else 'btn-outline-secondary' }}" style="{{ 'background-color: #0f766e; border-color: #0f766e;' if current_status == 'ditolak' }}">
+      Ditolak
+    </a>
+    <a href="{{ url_for('admin_verifikasi_list', status='kedaluwarsa') }}" class="btn btn-sm rounded-pill px-3 fw-bold {{ 'btn-primary' if current_status == 'kedaluwarsa' else 'btn-outline-secondary' }}" style="{{ 'background-color: #0f766e; border-color: #0f766e;' if current_status == 'kedaluwarsa' }}">
+      Kedaluwarsa (24 Jam)
+    </a>
+  </div>
+
+  <!-- Tabel Verifikasi -->
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr class="small text-muted text-uppercase">
+            <th class="ps-4">Kode & Tanggal</th>
+            <th>Data Calon Penghuni</th>
+            <th>Kamar Dipesan</th>
+            <th>Nominal & Bank</th>
+            <th>Bukti Transfer</th>
+            <th>Status Saat Ini</th>
+            <th class="text-end pe-4">Keputusan Pemilik Kos</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if bookings %}
+            {% for b in bookings %}
+              <tr>
+                <!-- Kode & Waktu -->
+                <td class="ps-4">
+                  <div class="fw-bold font-monospace text-dark">{{ b.booking_code }}</div>
+                  <div class="text-muted small">{{ b.created_at }}</div>
+                  {% if b.status == 'menunggu_pembayaran' %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" style="font-size: 0.65rem;">
+                      Batas 24 Jam: {{ b.expires_at }}
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- Calon Penghuni -->
+                <td>
+                  <div class="fw-bold text-dark">{{ b.user_name }}</div>
+                  <div class="small text-muted"><i class="bi bi-envelope me-1"></i>{{ b.user_email }}</div>
+                  <div class="small text-muted"><i class="bi bi-whatsapp me-1 text-success"></i>{{ b.user_phone }}</div>
+                </td>
+
+                <!-- Kamar -->
+                <td>
+                  <div class="fw-bold text-primary">Kamar {{ b.room_number }}</div>
+                  <div class="text-muted small">{{ b.room_name }} ({{ b.room_type }})</div>
+                </td>
+
+                <!-- Nominal & Bank -->
+                <td>
+                  <div class="fw-bold text-success" style="color: #0f766e !important;">{{ b.amount|rupiah }}</div>
+                  <div class="text-muted small">
+                    Bank: <strong>{{ b.bank_name }}</strong>
+                  </div>
+                </td>
+
+                <!-- Bukti Transfer -->
+                <td>
+                  {% if b.payment_proof %}
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill d-inline-flex align-items-center gap-1 shadow-sm" data-preview-img="{{ b.payment_proof }}" data-preview-title="Bukti Transfer {{ b.booking_code }} - {{ b.user_name }}">
+                      <i class="bi bi-image"></i>
+                      <span>Lihat Struk</span>
+                    </button>
+                    <div class="small text-muted mt-1" style="font-size: 0.7rem;">{{ b.payment_uploaded_at }}</div>
+                  {% else %}
+                    <span class="text-muted small fst-italic">Belum upload</span>
+                  {% endif %}
+                </td>
+
+                <!-- Status Saat Ini -->
+                <td>
+                  {% if b.status == 'menunggu_pembayaran' %}
+                    <span class="badge badge-dipesan px-3 py-2 rounded-pill">
+                      <i class="bi bi-hourglass me-1"></i>Menunggu Pembayaran
+                    </span>
+                  {% elif b.status == 'menunggu_verifikasi' %}
+                    <span class="badge badge-verifikasi px-3 py-2 rounded-pill">
+                      <i class="bi bi-clock-history me-1"></i>Perlu Verifikasi
+                    </span>
+                  {% elif b.status == 'disetujui' %}
+                    <span class="badge badge-kosong px-3 py-2 rounded-pill">
+                      <i class="bi bi-check-circle-fill me-1"></i>Disetujui (Lunas)
+                    </span>
+                    <div class="small text-muted mt-1" style="font-size: 0.7rem;">Kamar otomatis <strong>TERISI</strong></div>
+                  {% elif b.status == 'ditolak' %}
+                    <span class="badge badge-terisi px-3 py-2 rounded-pill">
+                      <i class="bi bi-x-circle-fill me-1"></i>Ditolak
+                    </span>
+                    {% if b.rejection_reason %}
+                      <div class="small text-danger mt-1" style="font-size: 0.75rem;">Alasan: {{ b.rejection_reason }}</div>
+                    {% endif %}
+                  {% else %}
+                    <span class="badge badge-kedaluwarsa px-3 py-2 rounded-pill">
+                      <i class="bi bi-slash-circle me-1"></i>Kedaluwarsa
+                    </span>
+                  {% endif %}
+                </td>
+
+                <!-- Aksi Persetujuan / Penolakan -->
+                <td class="text-end pe-4">
+                  {% if b.status == 'menunggu_verifikasi' %}
+                    <div class="d-flex gap-2 justify-content-end">
+                      <!-- Tombol Setujui -->
+                      <form method="POST" action="{{ url_for('admin_proses_verifikasi', booking_id=b.id) }}" onsubmit="return confirm('Setujui pembayaran kamar {{ b.room_number }}? Kamar akan otomatis berubah status menjadi TERISI.');">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-success btn-sm rounded-pill px-3 fw-bold">
+                          <i class="bi bi-check-lg me-1"></i> Setujui
+                        </button>
+                      </form>
+
+                      <!-- Tombol Tolak (Buka Modal) -->
+                      <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#rejectModal_{{ b.id }}">
+                        <i class="bi bi-x-lg me-1"></i> Tolak
+                      </button>
+                    </div>
+
+                    <!-- Modal Tolak Pembayaran -->
+                    <div class="modal fade text-start" id="rejectModal_{{ b.id }}" tabindex="-1" aria-hidden="true">
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                          <div class="modal-header border-bottom">
+                            <h6 class="modal-title fw-bold text-danger">
+                              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                              Tolak Bukti Pembayaran ({{ b.booking_code }})
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                          </div>
+                          <form method="POST" action="{{ url_for('admin_proses_verifikasi', booking_id=b.id) }}">
+                            <input type="hidden" name="action" value="reject">
+                            <div class="modal-body p-4">
+                              <p class="small text-muted mb-3">
+                                Memberitahu calon penghuni alasan penolakan dan membuka kembali kamar menjadi <strong>KOSONG</strong>.
+                              </p>
+
+                              <div class="mb-3">
+                                <label class="form-label small fw-semibold text-dark">Alasan Penolakan <span class="text-danger">*</span></label>
+                                <textarea name="rejection_reason" class="form-control" rows="3" placeholder="mis. Bukti transfer tidak terbaca / buram, nominal transfer tidak sesuai, dana belum masuk ke mutasi bank." required></textarea>
+                              </div>
+
+                              <div class="small text-muted">
+                                Opsi cepat alasan:
+                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                  <button type="button" class="btn btn-light btn-sm border" onclick="this.closest('form').querySelector('textarea').value='Nominal transfer tidak sesuai dengan harga sewa kamar.';">Nominal kurang</button>
+                                  <button type="button" class="btn btn-light btn-sm border" onclick="this.closest('form').querySelector('textarea').value='Bukti transfer buram atau tidak terbaca.';">Struk buram</button>
+                                  <button type="button" class="btn btn-light btn-sm border" onclick="this.closest('form').querySelector('textarea').value='Dana belum masuk ke rekening mutasi pemilik kos.';">Mutasi belum ada</button>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="modal-footer border-top bg-light">
+                              <button type="button" class="btn btn-secondary btn-sm rounded-pill" data-bs-dismiss="modal">Batal</button>
+                              <button type="submit" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">Konfirmasi Tolak</button>
+                            </div>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+
+                  {% else %}
+                    <span class="text-muted small">Selesai</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                Tidak ada data pembayaran dengan status ini.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

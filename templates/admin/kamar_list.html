@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Kelola Kamar Kos | KosNest Admin{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+  
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+          <li class="breadcrumb-item active">Kelola Kamar</li>
+        </ol>
+      </nav>
+      <h2 class="fw-extrabold text-dark mb-0">Daftar & Manajemen Kamar Kos</h2>
+    </div>
+    <a href="{{ url_for('admin_kamar_tambah') }}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" style="background-color: #0f766e; border-color: #0f766e;">
+      <i class="bi bi-plus-circle me-1"></i> Tambah Kamar Baru
+    </a>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr class="small text-muted text-uppercase">
+            <th class="ps-4">No. Kamar & Foto</th>
+            <th>Nama & Tipe</th>
+            <th>Lantai & Ukuran</th>
+            <th>Harga / Bulan</th>
+            <th>Fasilitas</th>
+            <th>Status Slot</th>
+            <th class="text-end pe-4">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rooms %}
+            <tr>
+              <td class="ps-4">
+                <div class="d-flex align-items-center gap-3">
+                  <img src="{{ r.main_image }}" alt="{{ r.room_number }}" class="rounded-3 border object-fit-cover cursor-pointer" style="width: 70px; height: 50px;" data-preview-img="{{ r.main_image }}" data-preview-title="Kamar {{ r.room_number }}">
+                  <div class="fw-bold fs-6 text-primary">{{ r.room_number }}</div>
+                </div>
+              </td>
+              <td>
+                <div class="fw-bold text-dark">{{ r.name }}</div>
+                <div class="text-muted small"><span class="badge bg-light text-secondary border">{{ r.type }}</span></div>
+              </td>
+              <td>
+                <div class="small fw-semibold text-dark">Lantai {{ r.floor }}</div>
+                <div class="text-muted small">{{ r.size }}</div>
+              </td>
+              <td>
+                <div class="fw-bold text-success" style="color: #0f766e !important;">{{ r.price|rupiah }}</div>
+              </td>
+              <td>
+                <div class="d-flex flex-wrap gap-1" style="max-width: 250px;">
+                  {% for f in (r.facilities or '').split(',') %}
+                    {% if loop.index <= 3 and f.strip() %}
+                      <span class="badge bg-light text-dark border small" style="font-size: 0.7rem;">{{ f.strip() }}</span>
+                    {% endif %}
+                  {% endfor %}
+                  {% if (r.facilities or '').split(',')|length > 3 %}
+                    <span class="badge bg-light text-muted border small" style="font-size: 0.7rem;">+{{ (r.facilities or '').split(',')|length - 3 }}</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                {% if r.status == 'kosong' %}
+                  <span class="badge badge-kosong px-3 py-2 rounded-pill">
+                    <i class="bi bi-check-circle-fill me-1"></i>Kosong
+                  </span>
+                {% elif r.status == 'dipesan' %}
+                  <span class="badge badge-dipesan px-3 py-2 rounded-pill">
+                    <i class="bi bi-hourglass-split me-1"></i>Dipesan
+                  </span>
+                {% else %}
+                  <span class="badge badge-terisi px-3 py-2 rounded-pill">
+                    <i class="bi bi-x-circle-fill me-1"></i>Terisi
+                  </span>
+                {% endif %}
+              </td>
+              <td class="text-end pe-4">
+                <div class="d-flex gap-1 justify-content-end">
+                  <a href="{{ url_for('detail_kamar', room_id=r.id) }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill px-2" title="Lihat Tampilan Penghuni">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  <a href="{{ url_for('admin_kamar_edit', room_id=r.id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                    <i class="bi bi-pencil-square me-1"></i> Ubah
+                  </a>
+                  <form method="POST" action="{{ url_for('admin_kamar_hapus', room_id=r.id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus kamar {{ r.room_number }}? Tindakan ini tidak dapat dibatalkan.');" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2" title="Hapus Kamar">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

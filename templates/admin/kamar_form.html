@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {{ 'Tambah Kamar Baru' if action == 'tambah' else 'Ubah Kamar ' ~ room.room_number }} | KosNest Admin
+{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+  
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-1">
+          <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}" class="text-decoration-none">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('admin_kamar_list') }}" class="text-decoration-none">Kelola Kamar</a></li>
+          <li class="breadcrumb-item active">{{ 'Tambah Kamar' if action == 'tambah' else 'Ubah ' ~ room.room_number }}</li>
+        </ol>
+      </nav>
+      <h2 class="fw-extrabold text-dark mb-0">
+        {{ 'Tambah Kamar Kos Baru' if action == 'tambah' else 'Ubah Data Kamar ' ~ room.room_number }}
+      </h2>
+    </div>
+    <a href="{{ url_for('admin_kamar_list') }}" class="btn btn-outline-secondary rounded-pill px-3">
+      <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
+    </a>
+  </div>
+
+  <form method="POST" enctype="multipart/form-data">
+    <div class="row g-4">
+      
+      <!-- Kolom Kiri: Informasi Kamar & Fasilitas -->
+      <div class="col-lg-8">
+        
+        <!-- Informasi Pokok -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-3"><i class="bi bi-info-circle text-primary me-2"></i>Informasi Pokok Kamar</h5>
+          
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label for="room_number" class="form-label small fw-semibold text-muted">Nomor Kamar <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="room_number" name="room_number" placeholder="mis. A-103" value="{{ room.room_number if room else '' }}" required>
+            </div>
+            <div class="col-md-5">
+              <label for="name" class="form-label small fw-semibold text-muted">Nama / Label Kamar <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="name" name="name" placeholder="mis. Kamar Deluxe Lantai 1" value="{{ room.name if room else '' }}" required>
+            </div>
+            <div class="col-md-3">
+              <label for="type" class="form-label small fw-semibold text-muted">Tipe Kamar <span class="text-danger">*</span></label>
+              <select class="form-select" id="type" name="type" required>
+                <option value="Standar" {{ 'selected' if room and room.type == 'Standar' }}>Standar</option>
+                <option value="Deluxe" {{ 'selected' if room and room.type == 'Deluxe' }}>Deluxe</option>
+                <option value="Superior" {{ 'selected' if room and room.type == 'Superior' }}>Superior</option>
+                <option value="VIP Suite" {{ 'selected' if room and room.type == 'VIP Suite' }}>VIP Suite</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label for="price" class="form-label small fw-semibold text-muted">Harga Sewa / Bulan (Rp) <span class="text-danger">*</span></label>
+              <input type="number" step="50000" class="form-control" id="price" name="price" placeholder="1500000" value="{{ room.price if room else '' }}" required>
+            </div>
+            <div class="col-md-4">
+              <label for="size" class="form-label small fw-semibold text-muted">Ukuran Kamar <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="size" name="size" placeholder="mis. 3 x 4 Meter" value="{{ room.size if room else '3 x 4 Meter' }}" required>
+            </div>
+            <div class="col-md-4">
+              <label for="floor" class="form-label small fw-semibold text-muted">Posisi Lantai <span class="text-danger">*</span></label>
+              <input type="number" min="1" max="10" class="form-control" id="floor" name="floor" value="{{ room.floor if room else 1 }}" required>
+            </div>
+          </div>
+
+          <div class="mb-2">
+            <label for="description" class="form-label small fw-semibold text-muted">Deskripsi Kamar</label>
+            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Jelaskan kondisi kamar, sirkulasi udara, pencahayaan, posisi jendela...">{{ room.description if room else '' }}</textarea>
+          </div>
+
+          {% if action == 'edit' %}
+            <div class="mt-3 p-3 bg-light rounded-3">
+              <label for="status" class="form-label small fw-semibold text-muted">Status Ketersediaan Kamar (Manual Override)</label>
+              <select class="form-select" id="status" name="status">
+                <option value="kosong" {{ 'selected' if room.status == 'kosong' }}>KOSONG (Tersedia untuk dibooking)</option>
+                <option value="dipesan" {{ 'selected' if room.status == 'dipesan' }}>DIPESAN (Terkunci menunggu bayar/verifikasi)</option>
+                <option value="terisi" {{ 'selected' if room.status == 'terisi' }}>TERISI (Sudah berpenghuni)</option>
+              </select>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Fasilitas Kamar -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-1"><i class="bi bi-stars text-warning me-2"></i>Daftar Fasilitas Kamar</h5>
+          <p class="text-muted small mb-3">Centang fasilitas yang tersedia khusus untuk kamar ini:</p>
+
+          <div class="row g-2 mb-3">
+            {% for fac in all_facilities %}
+              <div class="col-md-6">
+                <div class="form-check p-2 rounded-2 border" style="background: #f8fafc;">
+                  <input class="form-check-input ms-0 me-2" type="checkbox" name="facilities" value="{{ fac }}" id="fac_{{ loop.index }}" {{ 'checked' if fac in room_facilities }}>
+                  <label class="form-check-label small fw-medium text-dark cursor-pointer" for="fac_{{ loop.index }}">
+                    {{ fac }}
+                  </label>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <div>
+            <label for="custom_facilities" class="form-label small fw-semibold text-muted">Fasilitas Tambahan Lainnya (Pisahkan dengan koma)</label>
+            <input type="text" class="form-control" id="custom_facilities" name="custom_facilities" placeholder="mis. Cermin Panjang, Jemuran Handuk, Dispenser Mini">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Kolom Kanan: Foto Utama & Galeri Tambahan -->
+      <div class="col-lg-4">
+        
+        <!-- Foto Utama -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-3"><i class="bi bi-image text-primary me-2"></i>Foto Utama Kamar</h5>
+          
+          {% if room and room.main_image %}
+            <div class="mb-3 text-center">
+              <img src="{{ room.main_image }}" alt="Foto Utama" class="img-fluid rounded-3 border w-100 object-fit-cover shadow-sm" style="height: 180px;">
+              <small class="text-muted d-block mt-1">Foto utama saat ini</small>
+            </div>
+          {% endif %}
+
+          <div class="mb-2">
+            <label for="main_image" class="form-label small fw-semibold text-muted">
+              {{ 'Ganti Foto Utama' if room else 'Unggah Foto Utama' }} (JPG, PNG, WEBP)
+            </label>
+            <input type="file" class="form-control" id="main_image" name="main_image" accept="image/*">
+          </div>
+        </div>
+
+        <!-- Galeri Foto Tambahan -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+          <h5 class="fw-bold text-dark mb-1"><i class="bi bi-images text-info me-2"></i>Galeri Foto Tambahan</h5>
+          <p class="text-muted small mb-3">Foto sudut lain: kamar mandi dalam, meja belajar, jendela, dll.</p>
+
+          {% if gallery_images %}
+            <div class="mb-3">
+              <div class="small fw-semibold text-muted mb-2">Foto Galeri Tersimpan:</div>
+              <div class="d-flex flex-column gap-2">
+                {% for g in gallery_images %}
+                  <div class="d-flex align-items-center justify-content-between p-2 rounded border bg-light">
+                    <div class="d-flex align-items-center gap-2">
+                      <img src="{{ g.image_url }}" alt="Galeri" class="rounded object-fit-cover" style="width: 48px; height: 36px;">
+                      <span class="small text-truncate" style="max-width: 140px;">{{ g.caption or 'Foto Galeri' }}</span>
+                    </div>
+                    <button type="submit" formaction="{{ url_for('admin_hapus_foto_kamar', image_id=g.id) }}" formmethod="POST" class="btn btn-outline-danger btn-sm p-1 px-2" title="Hapus foto ini" onclick="return confirm('Hapus foto ini dari galeri?');">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label for="gallery_images" class="form-label small fw-semibold text-muted">Tambah Foto Galeri Baru (Bisa pilih banyak file)</label>
+            <input type="file" class="form-control" id="gallery_images" name="gallery_images" accept="image/*" multiple>
+          </div>
+        </div>
+
+        <!-- Tombol Simpan -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary py-3 rounded-pill fw-bold shadow-sm" style="background-color: #0f766e; border-color: #0f766e;">
+              <i class="bi bi-check2-circle me-1"></i> {{ 'Simpan Kamar Baru' if action == 'tambah' else 'Perbarui Data Kamar' }}
+            </button>
+            <a href="{{ url_for('admin_kamar_list') }}" class="btn btn-light rounded-pill">Batal</a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </form>
+
+</div>
+{% endblock %}

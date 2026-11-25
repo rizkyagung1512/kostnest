@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}KosNest | Info & Booking Kos Modern{% endblock %}</title>
+  
+  <!-- Google Fonts & Bootstrap 5 & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-kosnest sticky-top">
+    <div class="container">
+      <a class="navbar-brand brand-logo" href="{{ url_for('index') }}">
+        <i class="bi bi-houses-fill"></i>
+        <span>KosNest</span>
+        {% if current_user and current_user.role == 'admin' %}
+          <span class="brand-badge bg-danger-subtle text-danger border border-danger-subtle">ADMIN</span>
+        {% elif current_user %}
+          <span class="brand-badge">PENGHUNI</span>
+        {% endif %}
+      </a>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          {% if current_user %}
+            {% if current_user.role == 'admin' %}
+              <li class="nav-item">
+                <a class="nav-link fw-semibold {{ 'active text-primary' if request.endpoint == 'admin_dashboard' }}" href="{{ url_for('admin_dashboard') }}">
+                  <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link fw-semibold {{ 'active text-primary' if 'admin_kamar' in request.endpoint }}" href="{{ url_for('admin_kamar_list') }}">
+                  <i class="bi bi-door-open me-1"></i> Kelola Kamar
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link fw-semibold {{ 'active text-primary' if request.endpoint == 'admin_galeri_kos' }}" href="{{ url_for('admin_galeri_kos') }}">
+                  <i class="bi bi-images me-1"></i> Foto Kos
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link fw-semibold {{ 'active text-primary' if request.endpoint == 'admin_verifikasi_list' }}" href="{{ url_for('admin_verifikasi_list') }}">
+                  <i class="bi bi-patch-check me-1"></i> Verifikasi Pembayaran
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link text-muted" href="{{ url_for('katalog') }}" target="_blank">
+                  <i class="bi bi-eye me-1"></i> Lihat Sisi Penghuni
+                </a>
+              </li>
+            {% else %}
+              <li class="nav-item">
+                <a class="nav-link fw-semibold {{ 'active text-primary' if request.endpoint == 'katalog' }}" href="{{ url_for('katalog') }}">
+                  <i class="bi bi-grid me-1"></i> Papan & Katalog Kamar
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link fw-semibold {{ 'active text-primary' if request.endpoint == 'riwayat' }}" href="{{ url_for('riwayat') }}">
+                  <i class="bi bi-receipt-cutoff me-1"></i> Riwayat Pembayaran
+                </a>
+              </li>
+            {% endif %}
+          {% endif %}
+        </ul>
+
+        <div class="d-flex align-items-center gap-3">
+          {% if current_user %}
+            <div class="dropdown">
+              <button class="btn btn-light rounded-pill border dropdown-toggle px-3 py-1 d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle fs-5 text-secondary"></i>
+                <div class="text-start">
+                  <div class="fw-bold small lh-1">{{ current_user.full_name }}</div>
+                  <div class="text-muted" style="font-size: 0.7rem;">{{ current_user.role|upper }}</div>
+                </div>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li><span class="dropdown-item-text text-muted small"><i class="bi bi-envelope me-1"></i> {{ current_user.email }}</span></li>
+                <li><span class="dropdown-item-text text-muted small"><i class="bi bi-telephone me-1"></i> {{ current_user.phone }}</span></li>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item text-danger fw-semibold" href="{{ url_for('logout') }}">
+                    <i class="bi bi-box-arrow-right me-1"></i> Keluar
+                  </a>
+                </li>
+              </ul>
+            </div>
+          {% else %}
+            <a href="{{ url_for('login') }}" class="btn btn-outline-primary px-3 rounded-pill">Masuk</a>
+            <a href="{{ url_for('register') }}" class="btn btn-primary px-3 rounded-pill">Daftar Akun</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash Messages -->
+  <div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show rounded-3 shadow-sm border-0 d-flex align-items-center gap-2" role="alert">
+            {% if category == 'success' %}
+              <i class="bi bi-check-circle-fill fs-5 text-success"></i>
+            {% elif category == 'danger' %}
+              <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
+            {% elif category == 'warning' %}
+              <i class="bi bi-exclamation-circle-fill fs-5 text-warning"></i>
+            {% else %}
+              <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+            {% endif %}
+            <div class="flex-grow-1">{{ message }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content Block -->
+  <main class="py-4">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-top py-4 mt-auto">
+    <div class="container text-center text-muted small">
+      <div class="d-flex justify-content-center align-items-center gap-2 mb-1">
+        <span class="fw-bold text-dark">KosNest</span> &bull; 
+        <span>Aplikasi Web Informasi & Booking Kos Berbasis Ergonomi</span>
+      </div>
+      <p class="mb-0 text-secondary">Dua Role: Calon Penghuni (Titut) & Pemilik Kos (Admin) &bull; Ditenagai Python Flask & SQLite</p>
+    </div>
+  </footer>
+
+  <!-- Modal Preview Foto / Bukti Transfer -->
+  <div class="modal fade" id="imagePreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header border-0 pb-0">
+          <h6 class="modal-title fw-bold" id="previewModalTitle">Pratinjau Foto</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center p-3">
+          <img id="previewModalImg" src="" alt="Pratinjau" class="img-fluid rounded-3 shadow-sm" style="max-height: 75vh; width: auto;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- GSAP (animation engine) -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+  <!-- Lenis (smooth scroll) -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+
+  <!-- Motion One (animate API) -->
+  <script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.js"></script>
+
+  <!-- KosNest Main JS -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

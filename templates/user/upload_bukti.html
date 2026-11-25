@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Unggah Bukti Transfer - {{ booking.booking_code }} | KosNest{% endblock %}
+
+{% block content %}
+<div class="container pb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{{ url_for('katalog') }}" class="text-decoration-none">Katalog</a></li>
+          <li class="breadcrumb-item"><a href="{{ url_for('riwayat') }}" class="text-decoration-none">Riwayat</a></li>
+          <li class="breadcrumb-item active">Instruksi Pembayaran</li>
+        </ol>
+      </nav>
+
+      <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <!-- Header Banner -->
+        <div class="card-header p-4 text-white" style="background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);">
+          <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+              <span class="badge bg-white text-dark rounded-pill px-3 py-1 fw-bold mb-2">KODE: {{ booking.booking_code }}</span>
+              <h3 class="fw-bold mb-0">Instruksi Pembayaran E-Banking</h3>
+              <p class="mb-0 text-white-50 small">Selesaikan transfer dan unggah struk/screenshot pembayaran</p>
+            </div>
+            <div class="text-md-end">
+              <div class="text-white-50 small">Status Booking:</div>
+              {% if booking.status == 'menunggu_pembayaran' %}
+                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">Menunggu Pembayaran</span>
+              {% elif booking.status == 'menunggu_verifikasi' %}
+                <span class="badge bg-info text-dark px-3 py-2 rounded-pill fw-bold">Menunggu Verifikasi</span>
+              {% elif booking.status == 'disetujui' %}
+                <span class="badge bg-success px-3 py-2 rounded-pill fw-bold">Pembayaran Disetujui (Lunas)</span>
+              {% elif booking.status == 'ditolak' %}
+                <span class="badge bg-danger px-3 py-2 rounded-pill fw-bold">Ditolak Pemilik Kos</span>
+              {% else %}
+                <span class="badge bg-secondary px-3 py-2 rounded-pill fw-bold">Kedaluwarsa</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-4">
+          
+          <!-- Sisa Waktu Pembayaran (Countdown 24 Jam) -->
+          <div class="countdown-box mb-4 text-center">
+            <div class="small fw-semibold text-uppercase mb-1">Batas Waktu Pembayaran (24 Jam)</div>
+            <div data-countdown="{{ booking.expires_at }}" class="my-1">
+              <span class="fs-5 fw-bold text-dark">{{ booking.expires_at }}</span>
+            </div>
+            <div class="small text-muted">
+              Pemesanan dibuat pada {{ booking.created_at }}. Jika melewati batas waktu di atas, kamar otomatis dibuka kembali.
+            </div>
+          </div>
+
+          <!-- Alasan Penolakan Jika Ditolak -->
+          {% if booking.status == 'ditolak' and booking.rejection_reason %}
+            <div class="alert alert-danger border-0 rounded-3 p-3 mb-4">
+              <div class="fw-bold d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-x-circle-fill fs-5"></i>
+                Bukti Pembayaran Ditolak oleh Pemilik Kos
+              </div>
+              <p class="mb-2 small">Alasan: <strong>"{{ booking.rejection_reason }}"</strong></p>
+              <div class="small text-muted">
+                Silakan lakukan transfer ulang atau perbaiki gambar struk bukti transfer di bawah ini sebelum batas 24 jam berakhir.
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Rekening Tujuan & Jumlah Transfer -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <div class="p-3 rounded-3 border bg-light h-100">
+                <div class="text-muted small mb-1">Rekening Tujuan Pemilik Kos:</div>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="badge bg-primary px-2 py-1 fw-bold">{{ booking.bank_name }}</span>
+                  <strong class="fs-5 text-dark">{{ booking.bank_account_number }}</strong>
+                </div>
+                <div class="small text-secondary">
+                  Atas Nama: <strong>{{ booking.bank_account_holder }}</strong>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 rounded-3 border h-100" style="background: #f0fdf4; border-color: #bbf7d0 !important;">
+                <div class="text-success small fw-semibold mb-1">Nominal yang Harus Ditransfer:</div>
+                <div class="fs-3 fw-extrabold text-success mb-1" style="color: #0f766e !important;">
+                  {{ booking.amount|rupiah }}
+                </div>
+                <div class="small text-muted">Untuk Kamar {{ booking.room_number }} ({{ booking.room_name }})</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pratinjau Bukti Yang Pernah Diunggah -->
+          {% if booking.payment_proof %}
+            <div class="p-3 border rounded-3 bg-light mb-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-bold text-dark"><i class="bi bi-paperclip me-1"></i>Bukti Transfer Terakhir Diunggah:</span>
+                <span class="small text-muted">{{ booking.payment_uploaded_at }}</span>
+              </div>
+              <div class="d-flex align-items-center gap-3">
+                <img src="{{ booking.payment_proof }}" alt="Bukti Transfer" class="rounded-3 border object-fit-cover cursor-pointer" style="width: 100px; height: 75px;" data-preview-img="{{ booking.payment_proof }}" data-preview-title="Bukti Transfer {{ booking.booking_code }}">
+                <div>
+                  <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-preview-img="{{ booking.payment_proof }}" data-preview-title="Bukti Transfer {{ booking.booking_code }}">
+                    <i class="bi bi-eye me-1"></i> Lihat Bukti Penuh
+                  </button>
+                  <div class="text-muted small mt-1">Status: Menunggu konfirmasi pemilik kos</div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          <!-- Form Unggah Bukti Baru -->
+          {% if booking.status in ['menunggu_pembayaran', 'ditolak', 'menunggu_verifikasi'] %}
+            <form method="POST" action="{{ url_for('upload_bukti', booking_id=booking.id) }}" enctype="multipart/form-data">
+              <h5 class="fw-bold text-dark mb-3">
+                {% if booking.payment_proof %}
+                  Unggah Ulang Bukti Transfer
+                {% else %}
+                  Unggah Bukti Transfer E-Banking
+                {% endif %}
+              </h5>
+
+              <div class="mb-4">
+                <label for="payment_proof" class="form-label small fw-semibold text-muted">
+                  Pilih Foto Struk / Screenshot Bukti Transfer (JPG, PNG, atau WEBP max 16MB)
+                </label>
+                <input type="file" class="form-control py-2" id="payment_proof" name="payment_proof" accept="image/*" required>
+                <div class="form-text">Pastikan tanggal transfer, nomor rekening tujuan, dan nominal terlihat jelas.</div>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                <a href="{{ url_for('riwayat') }}" class="btn btn-light rounded-pill px-4">
+                  <i class="bi bi-arrow-left me-1"></i> Ke Riwayat
+                </a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4 py-2 fw-bold" style="background-color: #0f766e; border-color: #0f766e;">
+                  <i class="bi bi-cloud-arrow-up-fill me-1"></i> Kirim Bukti Transfer
+                </button>
+              </div>
+            </form>
+          {% else %}
+            <div class="text-center py-3">
+              <a href="{{ url_for('riwayat') }}" class="btn btn-outline-secondary rounded-pill px-4">
+                Kembali ke Riwayat Pembayaran
+              </a>
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
