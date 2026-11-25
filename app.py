@@ -389,7 +389,9 @@ def upload_bukti(booking_id):
 
         if request.method == 'POST':
             # Cek apakah sudah expired
-            exp_date = datetime.strptime(booking['expires_at'], '%Y-%m-%d %H:%M:%S')
+            exp_date = booking['expires_at']
+        if isinstance(exp_date, str):
+            exp_date = datetime.strptime(exp_date, '%Y-%m-%d %H:%M:%S')
             if datetime.now() > exp_date and booking['status'] == 'menunggu_pembayaran':
                 cursor.execute("UPDATE bookings SET status = 'kedaluwarsa' WHERE id = ?", (booking_id,))
                 cursor.execute("UPDATE rooms SET status = 'kosong' WHERE id = ?", (booking['room_id'],))
