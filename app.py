@@ -12,7 +12,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from database import (
     get_db, init_db, check_and_expire_bookings,
-    BANK_ACCOUNTS, ALL_FACILITIES, UPLOAD_FOLDER
+    BANK_ACCOUNTS, ALL_FACILITIES, UPLOAD_FOLDER,
+    upload_to_storage
+
 )
 
 app = Flask(__name__)
@@ -407,10 +409,7 @@ def upload_bukti(booking_id):
             if file and allowed_file(file.filename):
                 ext = file.filename.rsplit('.', 1)[1].lower()
                 safe_name = f"proof_{booking['booking_code']}_{int(datetime.now().timestamp())}.{ext}"
-                target_path = os.path.join(UPLOAD_FOLDER, 'proofs', safe_name)
-                file.save(target_path)
-                proof_url = f"/static/uploads/proofs/{safe_name}"
-
+                proof_url = upload_to_storage(file, 'proofs', safe_name)
                 # Update status booking menjadi 'menunggu_verifikasi'
                 now_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 cursor.execute('''

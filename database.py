@@ -1,5 +1,6 @@
 import os
 import re
+import urllib.request, urllib.parse
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
@@ -50,6 +51,27 @@ ALL_FACILITIES = [
 # ---------------------------------------------------------------
 # Pembungkus agar kode gaya SQLite tetap jalan di PostgreSQL
 # ---------------------------------------------------------------
+
+def upload_to_storage(file_storage, bucket, filename):
+    """Upload file ke Supabase Storage, kembalikan URL publik."""
+    base = os.environ["SUPABASE_URL"].rstrip('/')
+    key = os.environ["SUPABASE_SERVICE_KEY"]
+    data = file_storage.read()
+    path = urllib.parse.quote(filename)
+    req = urllib.request.Request(
+        f"{base}/storage/v1/object/{bucket}/{path}",
+        data=data,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {key}",
+            "apikey": key,
+            "Content-Type": file_storage.mimetype or "application/octet-stream",
+            "x-upsert": "true",
+        },
+    )
+    urllib.request.urlopen(req)
+    return f"{base}/storage/v1/object/public/{bucket}/{path}"
+
 def _convert_sql(sql):
     sql = sql.replace('%', '%%')
     sql = sql.replace('?', '%s')
